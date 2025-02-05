@@ -13,12 +13,16 @@ def get_movies_from_description(description):
     try:
         model = genai.GenerativeModel("gemini-1.5-flash")  # Using a valid model
         prompt = (
-            f"Create a List of top 10 movies along with their release dates that match this description: '{description}'."
-            "The ranking should be according to to IMDB. It is okay if the results are not perfect. But make sure to get 10 movies"
-            "along with their release dates, and nothing more than that. In case a movie is mentioned in the description, do not add it again."
-            "Return the result as a JSON array, with only the movie names, their release dates and a brief intro on the movie"
-            " , no extra text or formatting."
+            f"Provide a JSON array of **exactly 10 real movies** that match this description: '{description}'. "
+            "The movies **must be real and well-known, sourced from actual movie databases like IMDb**. "
+            "Each entry should include: "
+            "1. 'movie': The exact title of the movie. "
+            "2. 'release_date': The official release date in 'YYYY-MM-DD' format. "
+            "3. 'intro': A short, one-sentence summary of the movie. "
+            "Ensure that the response contains **only a valid JSON array**, with no additional text, formatting, or explanations. "
+            "Do not include any fictional or AI-generated movies—only widely recognized real films."
         )
+
         
         response = model.generate_content(prompt)
 
