@@ -9,3 +9,5 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
