@@ -6,22 +6,28 @@ from app.config import GEMINI_API_KEY
 # Load the API key from environment variables
 genai.configure(api_key=GEMINI_API_KEY)
 
-def get_movies_from_description_using_gemini(description):
-    """
-    Uses Gemini to find the top 10 movies based on a given description.
-    """
+def get_movies_from_description_using_gemini(description, exclude_list):
+    
+    
     try:
         model = genai.GenerativeModel("gemini-1.5-flash")  # Using a valid model
         prompt = (
-            f"Provide a JSON array of **exactly 10 real movies** that match this description: '{description}'. "
-            "The movies **must be real and well-known, sourced from actual movie databases like IMDb**. "
-            "Each entry should include: "
+            f"Provide a JSON array of exactly 10 real movies that match this description: '{description}'. "
+            "The movies must be real, well-known, and sourced from actual movie databases like IMDb. "
+            "Each entry in the JSON array should include: "
             "1. 'movie': The exact title of the movie. "
             "2. 'release_date': The official release date in 'YYYY-MM-DD' format. "
             "3. 'intro': A short, one-sentence summary of the movie. "
-            "Ensure that the response contains **only a valid JSON array**, with no additional text, formatting, or explanations. "
+            "Ensure the response contains only a valid JSON array, with no additional text, formatting, or explanations. "
             "Do not include any fictional or AI-generated movies—only widely recognized real films."
         )
+
+        # Add exclusion list to the prompt only if it's not empty
+        if exclude_list and exclude_list.strip():
+            prompt += (
+                f" **Important:** Do not include any of the following movies in the suggestions: {exclude_list}. "
+                "If any of these movies match the description, exclude them and suggest other movies instead."
+            )
 
         
         response = model.generate_content(prompt)
