@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request
 from app.gemini.utils import *
 from app.deepseek.utils import *
+from app.openperplex.utils import *
+from app.perplexity.utils import *
 
 
 
@@ -205,5 +207,55 @@ def searchBookBasedOnDescriptionWithDeepSeek():
         else:
             return jsonify({"error": books}), 500  # Return 500 only for errors
     
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+
+@main.route('/api/searchCurrentMoviesInCinemasUsingOpenPerplex', methods=['POST'])
+def searchCurrentMoviesInCinemasUsingOpenPerplex():
+    data = request.json
+    pincode = data.get('pincode', '')
+    date = data.get('date', '')
+    radius = data.get('radius', 10)  # Default to 10 miles if not provided
+
+    if not pincode or not date:
+        return jsonify({"error": "Pincode and date are required"}), 400
+
+    try:
+        movies = get_current_movies_in_cinemas_using_openperplex(pincode, date, radius)
+
+        if isinstance(movies, list):
+            return jsonify({"movies": movies}), 200
+        else:
+            return jsonify({"error": movies}), 500
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+@main.route('/api/searchCurrentMoviesInCinemasUsingPerplexity', methods=['POST'])
+def search_current_movies_in_cinemas_using_perplexity():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON payload"}), 400
+
+    pincode = data.get('pincode', '')
+    date = data.get('date', '')
+    radius = data.get('radius', 10)  # Default to 10 miles if not provided
+
+    if not pincode or not date:
+        return jsonify({"error": "Pincode and date are required"}), 400
+
+    try:
+        movies_data = get_current_movies_in_cinemas_using_perplexity(pincode, date, radius)
+
+        # Ensure movies_data is a dictionary
+        if not isinstance(movies_data, dict) or movies_data.get("cinemas") == {}:
+            return jsonify({"message": "No movies found for the given date and location"}), 200
+
+        return jsonify(movies_data), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
