@@ -62,15 +62,17 @@ def get_movies_from_description_using_deepseek(description, exclude_list):
 
 def generate_itinerary_using_deepseek(destination, duration, interests, budget, exclude):
     try:
-        client = OpenAI(
-            api_key=DEEPSEEK_API_KEY,
-            base_url="https://api.deepseek.com/v1",
-            timeout=30,
-            default_headers={
-                "User-Agent": "YourApp/1.0",
-                "Accept": "application/json"
-            }
-        )
+        # client = OpenAI(
+        #     api_key=DEEPSEEK_API_KEY,
+        #     base_url="https://api.deepseek.com/v1",
+        #     timeout=30,
+        #     default_headers={
+        #         "User-Agent": "YourApp/1.0",
+        #         "Accept": "application/json"
+        #     }
+        # )
+        client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
+
 
         print(f"API Key: {'valid' if DEEPSEEK_API_KEY.startswith('sk-') else 'invalid'} ({DEEPSEEK_API_KEY[:8]}...)")
         
