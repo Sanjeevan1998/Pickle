@@ -16,10 +16,10 @@ In today's world, people face **choice paralysis**—the overwhelming inability 
 
 ## 🛠️ Tech Stack  
 - **Backend**: Flask (Python)  
-- **AI/LLM**: TBD  
-- **Database**: TBD  
-- **Frontend**: TBD  
-- **Deployment**: TBD  
+- **AI/LLM**: DeepSeek, Perplexity, OpenPerplex  
+- **Database**: None  
+- **Frontend**: Flutter  
+- **Backend**: Flask  
 
 ## 🚀 Getting Started  
 
