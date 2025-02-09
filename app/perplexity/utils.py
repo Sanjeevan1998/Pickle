@@ -1,5 +1,4 @@
 from openai import OpenAI
-from pydantic import BaseModel, ValidationError
 from typing import Dict
 import json
 import os
