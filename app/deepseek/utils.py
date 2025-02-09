@@ -119,3 +119,41 @@ def generate_itinerary_using_deepseek(destination, duration, interests, budget, 
 
     except Exception as e:
         return {"error": str(e)}
+
+
+def create_schedule_using_deepseek(calendar_events, tasks, physical_activities):
+    try:
+        client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
+
+        # Construct the prompt for DeepSeek
+        prompt = (
+            f"Generate a daily schedule for the user based on the following inputs:\n\n"
+            f"**Calendar Events:**\n{json.dumps(calendar_events, indent=2)}\n\n"
+            f"**Tasks:**\n{json.dumps(tasks, indent=2)}\n\n"
+            f"**Physical Activities:**\n{json.dumps(physical_activities, indent=2)}\n\n"
+            "The schedule should:\n"
+            "1. Prioritize tasks and activities based on their importance and deadlines.\n"
+            "2. Allocate time for physical activities to ensure a healthy balance.\n"
+            "3. Avoid conflicts with existing calendar events.\n"
+            "4. Be realistic and consider the duration of each task/activity.\n"
+            "5. Include breaks and buffer time between tasks.\n\n"
+            "Return the schedule as a well written string"
+        )
+
+        # Call the DeepSeek API
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": "You are a brilliant personal assistant who creates optimized schedules for users."},
+                {"role": "user", "content": prompt}
+            ],
+            stream=False
+        )
+
+        # Extract the response content
+        response_text = response.choices[0].message.content.strip()
+
+        return response_text
+
+    except Exception as e:
+        return {"error": str(e)}

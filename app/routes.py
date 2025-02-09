@@ -317,3 +317,32 @@ def generate_travel_itinerary_deepseek():
         return jsonify({"itinerary": itinerary}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    
+    
+    
+@main.route('/api/createScheduleUsingDeepseek', methods=['POST'])
+def create_schedule():
+    try:
+        # Get the request data
+        data = request.get_json()
+        calendar_events = data.get("calendarEvents", [])
+        tasks = data.get("tasks", [])
+        physical_activities = data.get("physicalActivities", [])
+
+        # Validate the input data
+        if not isinstance(calendar_events, list) or not isinstance(tasks, list) or not isinstance(physical_activities, list):
+            return jsonify({"error": "Invalid input format. Expected lists for calendarEvents, tasks, and physicalActivities."}), 400
+
+        # Call the DeepSeek function to generate the schedule
+        schedule = create_schedule_using_deepseek(calendar_events, tasks, physical_activities)
+
+        # Check for errors in the response
+        if "error" in schedule:
+            return schedule, 500
+
+        # Return the generated schedule
+        return schedule, 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
