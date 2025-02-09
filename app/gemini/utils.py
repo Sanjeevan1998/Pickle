@@ -51,3 +51,39 @@ def get_movies_from_description_using_gemini(description, exclude_list):
 
     except Exception as e:
         return {"error": str(e)}  # Return error message
+
+def generate_itinerary_using_gemini(destination, duration, interests, budget, exclude):
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        prompt = f"""
+        Create a detailed {duration}-day travel itinerary for {destination} focusing on {interests}.
+        Budget level: {budget or 'medium'}.
+        Include for each day:
+        - Morning activity
+        - Afternoon activity
+        - Evening activity
+        - Recommended accommodations
+        - Local transportation tips
+        
+        Format as JSON array with keys:
+        "day", "date", "activities", "accommodation", "transportation"
+        
+        Exclude: {exclude}
+        """
+        
+        # Print the generated prompt
+        print(f"\n=== Gemini Prompt ===\n{prompt}\n====================\n")
+        
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
+        
+        if response_text.startswith("```json"):
+            response_text = response_text.replace("```json", "").replace("```", "").strip()
+            
+        itinerary = json.loads(response_text)
+        if isinstance(itinerary, list):
+            return itinerary
+        return {"error": "Invalid itinerary format"}
+
+    except Exception as e:
+        return {"error": str(e)}

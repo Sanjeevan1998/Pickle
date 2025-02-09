@@ -267,3 +267,53 @@ def search_current_movies_in_cinemas_using_perplexity():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+		
+@main.route('/api/generateTravelItineraryWithGemini', methods=['POST'])
+def generate_travel_itinerary_gemini():
+    data = request.json
+    destination = data.get('destination')
+    duration = data.get('duration')
+    interests = data.get('interests')
+    budget = data.get('budget')
+    exclude = data.get('exclude', '')
+
+    if not all([destination, duration, interests]):
+        return jsonify({"error": "Missing required parameters"}), 400
+
+    try:
+        itinerary = generate_itinerary_using_gemini(
+            destination=destination,
+            duration=duration,
+            interests=interests,
+            budget=budget,
+            exclude=exclude
+        )
+        return jsonify({"itinerary": itinerary}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@main.route('/api/generateTravelItineraryWithDeepSeek', methods=['POST'])
+def generate_travel_itinerary_deepseek():
+    data = request.json
+    destination = data.get('destination')
+    duration = data.get('duration')
+    interests = data.get('interests')
+    budget = data.get('budget')
+    exclude = data.get('exclude', '')
+
+    if not all([destination, duration, interests]):
+        return jsonify({"error": "Missing required parameters"}), 400
+
+    try:
+        itinerary = generate_itinerary_using_deepseek(
+            destination=destination,
+            duration=duration,
+            interests=interests,
+            budget=budget,
+            exclude=exclude
+        )
+        if isinstance(itinerary, dict) and 'error' in itinerary:
+            return jsonify(itinerary), 500
+        return jsonify({"itinerary": itinerary}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

@@ -59,3 +59,61 @@ def get_movies_from_description_using_deepseek(description, exclude_list):
 
     except Exception as e:
         return {"error": str(e)}
+
+def generate_itinerary_using_deepseek(destination, duration, interests, budget, exclude):
+    try:
+        client = OpenAI(
+            api_key=DEEPSEEK_API_KEY,
+            base_url="https://api.deepseek.com/v1",
+            timeout=30,
+            default_headers={
+                "User-Agent": "YourApp/1.0",
+                "Accept": "application/json"
+            }
+        )
+
+        print(f"API Key: {'valid' if DEEPSEEK_API_KEY.startswith('sk-') else 'invalid'} ({DEEPSEEK_API_KEY[:8]}...)")
+        
+        prompt = f"""
+        [Role]: You are an expert travel planner.
+        [Task] Create a {duration}-day itinerary for {destination} with:
+        - Interests: {interests}
+        - Budget: {budget or 'medium'}
+        - Exclude: {exclude or 'no restrictions'}
+        
+        [Format] JSON array with daily details including:
+        "day", "date", "activities", "area_to_stay", "transportation"
+        
+        [Instructions]:
+        - For "area_to_stay", suggest the best neighborhood (3 at max), district, or area to stay in for that day, based on the activities planned.
+        - Do not recommend specific hotels or accommodations—only general areas.
+        - Ensure the areas suggested are safe, convenient, and align with the traveler's interests and budget.
+        """
+        
+        print(f"\n=== DeepSeek Prompt ===\n{prompt}\n======================\n")
+        
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": "You are a professional travel planner."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        response_text = response.choices[0].message.content.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text.replace("```json", "").replace("```", "").strip()
+            
+        print(f"\n=== DeepSeek response ===\n{response_text}\n======================\n")
+
+        itinerary = json.loads(response_text)
+        if isinstance(itinerary, list):
+            required_keys = ["day", "activities", "area_to_stay", "transportation"]
+            for day_plan in itinerary:
+                if not all(key in day_plan for key in required_keys):
+                    return {"error": "Invalid itinerary structure"}
+            return itinerary
+        return {"error": "Response was not a list", "response": response_text}
+
+    except Exception as e:
+        return {"error": str(e)}
