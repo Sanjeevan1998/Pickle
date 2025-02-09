@@ -41,7 +41,9 @@ def get_movies_from_description_using_deepseek(description, exclude_list):
 
         # Remove Markdown-style code blocks (```json ... ```)
         if response_text.startswith("```json"):
-            response_text = response_text.replace("```json", "").replace("```", "").strip()
+            response_text = response_text[7:-3].strip()
+        elif response_text.startswith("```"):
+            response_text = response_text[3:-3].strip()
 
         # Parse the response as JSON
         try:
@@ -154,6 +156,68 @@ def create_schedule_using_deepseek(calendar_events, tasks, physical_activities):
         response_text = response.choices[0].message.content.strip()
 
         return response_text
+
+    except Exception as e:
+        return {"error": str(e)}
+def get_meal_suggestions_using_deepseek(ingredients: list, preferences: str = "", calorie: int = None, protein: int = None):
+    try:
+        client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
+        
+        nutrition_rules = ""
+        if calorie:
+            nutrition_rules += f"- Maximum {calorie} calories per serving\n"
+        if protein:
+            nutrition_rules += f"- Minimum {protein}g protein per serving\n"
+
+        prompt = f"""
+        [Role]: You are a nutritionist and meal planning expert
+        [Task]: Create 3 healthy meal suggestions using these ingredients: {', '.join(ingredients)}
+        
+        [Parameters]:
+        - Preferences: {preferences if preferences else 'No restrictions'}
+        {nutrition_rules if nutrition_rules else '- No specific nutrition requirements'}
+        
+        [Format]: JSON array with:
+        - meal_name
+        - ingredients_needed (mark which are available)
+        - missing_ingredients
+        - nutrition_info (calories, protein)
+        - cooking_instructions
+        - dietary_tags (vegan/gluten-free/etc)
+        
+        [Rules]:
+        - Prioritize whole foods and fresh ingredients
+        - Include storage/prep tips for ingredients
+        - Flag any allergy concerns
+        - Estimate cooking time
+        """
+        print(f"\n=== DeepSeek Prompt for meal suggestion ===\n{prompt}\n======================\n")
+
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": "You are a professional nutritionist creating healthy meal plans."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        response_text = response.choices[0].message.content.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text[7:-3].strip()
+        elif response_text.startswith("```"):
+            response_text = response_text[3:-3].strip()
+
+        print(f"\n=== DeepSeek response for meal suggestion ===\n{response_text}\n======================\n")
+
+        try:
+            meals = json.loads(response_text)
+            if isinstance(meals, list):
+                return {"meal_suggestions": meals}
+            return {"error": "Invalid response format", "response": response_text}
+        except json.JSONDecodeError as e:
+            print(f"JSON Decode Error: {str(e)}")
+            print(f"Raw Response: {response_text}")
+            return {"error": f"Failed to parse JSON: {str(e)}", "response": response_text}
 
     except Exception as e:
         return {"error": str(e)}

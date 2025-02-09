@@ -60,3 +60,112 @@ def get_current_movies_in_cinemas_using_perplexity(pincode: str, date: str, radi
 
     except Exception as e:
         return {"error": f"Perplexity API request failed: {str(e)}"}
+
+
+def find_grocery_stores_using_perplexity(missing_items: list, zipcode: str, radius: int = 3):
+    try:
+        client = OpenAI(api_key=PERPLEXITY_API_KEY, base_url="https://api.perplexity.ai")
+        
+        prompt = f"""
+        Find grocery stores within {radius} miles of {zipcode} that sell these items: {', '.join(missing_items)}.
+        Return results as a JSON array with:
+        - store_name
+        - address
+        - items_sold (specific items from the request list that are available)
+        
+        For each store, include:
+        - Actual items from the requested list that are available
+        - Focus on stores with fresh produce and whole foods
+        
+        Example format:
+        {{
+            "store_name": "Whole Foods Market",
+            "address": "123 Main St, City, ST 12345",
+            "items_sold": ["organic basil", "extra virgin olive oil"]
+        }}
+        """
+
+        response = client.chat.completions.create(
+            model="sonar",
+            messages=[
+                {"role": "system", "content": "You are a food sourcing expert focused on fresh ingredients."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        response_text = response.choices[0].message.content.strip()
+        json_match = re.search(r"```json\n(.+?)\n```", response_text, re.DOTALL)
+        json_string = json_match.group(1).strip() if json_match else response_text
+        
+        try:
+            stores = json.loads(json_string)
+            return stores if isinstance(stores, list) else []
+        except json.JSONDecodeError:
+            return {"error": "Failed to parse store data", "response": response_text}
+
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def find_restaurants_using_perplexity(zipcode: str, cuisine_or_dish: str, allergies: str = "", radius: int = 2):
+    try:
+        client = OpenAI(api_key=PERPLEXITY_API_KEY, base_url="https://api.perplexity.ai")
+        
+        prompt = f"""
+        Find restaurants within {radius} miles of {zipcode} that serve {cuisine_or_dish} or have it on their menu.
+        {f"Avoid ingredients: {allergies}" if allergies else ""}
+        
+        Return results as a JSON array with:
+        - restaurant_name
+        - address
+        - rating (out of 5)
+        - price_range (actual numerical range from menu data e.g., "$10-25")
+        - favorites (combination of 3 popular dishes and customer praises)
+        
+        Example format for "Burger" search:
+        {{
+            "restaurant_name": "The Burger Joint",
+            "address": "123 Beef St, Brooklyn, NY 11201",
+            "rating": 4.6,
+            "price_range": "$12-18",
+            "favorites": [
+                "Classic Cheeseburger (Juicy patty with melted cheddar - $14)",
+                "Truffle Fries (Crispy with real truffle oil - $8)",
+                "Milkshakes (Thick and creamy - customers love the vanilla bean)"
+            ]
+        }}
+        
+        Example format for "Sushi" search:
+        {{
+            "restaurant_name": "Sushi Master",
+            "address": "456 Fish Ave, Brooklyn, NY 11201",
+            "rating": 4.8,
+            "price_range": "$25-50",
+            "favorites": [
+                "Omakase Platter (Chef's selection - $45-75)",
+                "Spicy Tuna Roll (Perfect heat balance - $18)",
+                "Fresh Uni (Daily imported - reviewers call it 'melt-in-mouth')"
+            ]
+        }}
+        """
+
+        response = client.chat.completions.create(
+            model="sonar",
+            messages=[
+                {"role": "system", "content": "You are a food critic and restaurant analyst."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        response_text = response.choices[0].message.content.strip()
+        json_match = re.search(r"```json\n(.+?)\n```", response_text, re.DOTALL)
+        json_string = json_match.group(1).strip() if json_match else response_text
+        
+        try:
+            restaurants = json.loads(json_string)
+            return restaurants if isinstance(restaurants, list) else []
+        except json.JSONDecodeError:
+            return {"error": "Failed to parse restaurant data", "response": response_text}
+
+    except Exception as e:
+        return {"error": str(e)}
